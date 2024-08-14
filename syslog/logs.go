@@ -53,33 +53,45 @@ func getSeverity(severity int) string {
 }
 
 // HandleLogs is a function to handle logs from syslog and send them to Loki or Promtail - promtail does not work because printers send logs in a different format than it should and Promtails throws EOF error
-func HandleLogs(listenUDP string, directory string, filename string, maxSize int, maxBackups int, maxAge int) {
+func HandleLogs(listenUDP string, directory string, filename string, maxSize int, maxBackups int, maxAge int, logToFile bool) {
 	channel, server := startSyslogServer(listenUDP)
-	log.Debug().Msg("Syslog server for logs started at: " + listenUDP)
 
-	if err := os.MkdirAll(directory, 0744); err != nil {
-		log.Panic().Err(err).Str("path", directory).Msg("Can't create log directory")
-		return
+	var syslogLogger zerolog.Logger
+
+	if logToFile {
+
+		log.Debug().Msg("Syslog server for logs started at: " + listenUDP)
+
+		if err := os.MkdirAll(directory, 0744); err != nil {
+			log.Panic().Err(err).Str("path", directory).Msg("Can't create log directory")
+			return
+		}
+
+		writers := []io.Writer{&lumberjack.Logger{
+			Filename:   path.Join(directory, filename),
+			MaxBackups: maxBackups, // maximum number of backups
+			MaxSize:    maxSize,    // in MB
+			MaxAge:     maxAge,     // in Days
+		}}
+
+		mw := io.MultiWriter(writers...)
+
+		syslogLogger = zerolog.New(mw).With().Timestamp().Logger()
+
+		log.Debug().Msg("Syslog logs are being written to: " + path.Join(directory, filename))
+
+	} else {
+
+		syslogLogger = zerolog.New(os.Stdout).With().Timestamp().Logger()
+
 	}
-
-	writers := []io.Writer{&lumberjack.Logger{
-		Filename:   path.Join(directory, filename),
-		MaxBackups: maxBackups, // maximum number of backups
-		MaxSize:    maxSize,    // in MB
-		MaxAge:     maxAge,     // in Days
-	}}
-
-	mw := io.MultiWriter(writers...)
-
-	syslogLogger := zerolog.New(mw).With().Timestamp().Logger()
-
-	log.Debug().Msg("Syslog logs are being written to: " + path.Join(directory, filename))
 
 	go func(channel syslog.LogPartsChannel) {
 		for logParts := range channel {
 
 			log.Trace().Msg(fmt.Sprintf("%v", logParts))
 			syslogLogger.Info().
+				Str("log_processor", "true").
 				Str("app_name", logParts["app_name"].(string)).
 				Str("client", strings.Split(logParts["client"].(string), ":")[0]).
 				Str("hostname", logParts["hostname"].(string)).
