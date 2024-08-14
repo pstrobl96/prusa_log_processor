@@ -15,8 +15,7 @@ import (
 var (
 	metricsPath         = kingpin.Flag("exporter.metrics-path", "Path where to expose metrics.").Default("/metrics").String()
 	metricsPort         = kingpin.Flag("exporter.metrics-port", "Port where to expose metrics.").Default("10010").Int()
-	syslogListenAddress = kingpin.Flag("processor.address", "Address where to expose port for gathering logs.").Default(":8514").String()
-	syslogPort          = kingpin.Flag("processor.port", "Port where to expose port for gathering logs.").Default("8514").Int()
+	syslogListenAddress = kingpin.Flag("processor.address", "Address where to expose port for gathering logs.").Default("0.0.0.0:8514").String()
 	syslogToFile        = kingpin.Flag("processor.log-to-file", "Write logs to file.").Default("false").Bool()
 	syslogDirectory     = kingpin.Flag("processor.directory", "Directory where to store logs.").Default("./logs").String()
 	syslogFilename      = kingpin.Flag("processor.filename", "Filename where to store logs.").Default("prusa.log").String()
@@ -42,7 +41,7 @@ func Run() {
 	//var collectors []prometheus.Collector
 
 	log.Info().Msg("Syslog logs server starting at: " + *syslogListenAddress)
-	go syslog.HandleLogs(*syslogListenAddress+":"+strconv.Itoa(*syslogPort), *syslogDirectory, *syslogFilename, *syslogMaxSize, *syslogMaxBackups, *syslogMaxAge, *syslogToFile)
+	go syslog.HandleLogs(*syslogListenAddress, *syslogDirectory, *syslogFilename, *syslogMaxSize, *syslogMaxBackups, *syslogMaxAge, *syslogToFile)
 
 	http.Handle(*metricsPath, promhttp.Handler())
 	http.ListenAndServe(":"+strconv.Itoa(*metricsPort), nil)
