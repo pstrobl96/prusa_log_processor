@@ -15,7 +15,7 @@ import (
 var (
 	metricsPath         = kingpin.Flag("exporter.metrics-path", "Path where to expose metrics.").Default("/metrics").String()
 	metricsPort         = kingpin.Flag("exporter.metrics-port", "Port where to expose metrics.").Default("10010").Int()
-	syslogListenAddress = kingpin.Flag("processor.address", "Address where to expose port for gathering logs.").Default("0.0.0.0:8514").String()
+	syslogListenAddress = kingpin.Flag("processor.address", "Address where to expose port for gathering logs. - format <address>:<port>").Default("0.0.0.0:13514").String()
 	syslogToFile        = kingpin.Flag("processor.log-to-file", "Write logs to file.").Default("false").Bool()
 	syslogDirectory     = kingpin.Flag("processor.directory", "Directory where to store logs.").Default("./logs").String()
 	syslogFilename      = kingpin.Flag("processor.filename", "Filename where to store logs.").Default("prusa.log").String()
