@@ -30,7 +30,7 @@ Example
 
 ## Enable SYSLOG in printer
 
-To gather logs you have to allow sending logs to `prusa_log_processor`. You have to create `config.gcode` that will contain M340 command which set up log server address. Bellow you'll find manual how to set up your printer. Example 
+To gather logs you have to allow sending logs to `prusa_log_processor`. You have to create `config.gcode` that will contain M340 command which set up log server address. Bellow you'll find manual how to set up your printer. Example gcode [can be found](docs/printer/config.gcode) in docs folder.
 
 ```
 M340 192.168.20.2 13514
